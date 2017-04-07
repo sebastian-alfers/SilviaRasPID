@@ -48,7 +48,7 @@ if __name__ == '__main__':
     args = sys.argv
     errorMsg ="please pass 'dev' or 'prod' as arg"
     MODE_DEV="dev"
-    MODE_PROD="prot"
+    MODE_PROD="prod"
 
     if(len(args) != 2):
         print errorMsg
