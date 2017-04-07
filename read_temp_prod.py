@@ -7,6 +7,7 @@ import Adafruit_MAX31855.MAX31855 as MAX31855
 sensor = MAX31855.MAX31855(spi=SPI.SpiDev(0, 0))
 prevTemp = 0
 def getTemp():
+    global prevTemp
     temp = sensor.readTempC()
     if not isnan(temp):
         prevTemp = temp
