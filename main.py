@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+from multiprocessing import Process, Manager
+import sys
+from time import sleep
+
 def server(i, tempState):
     from bottle import route, run, get, post, request, static_file, abort
     from subprocess import call
@@ -25,7 +29,7 @@ def server(i, tempState):
     def servfile(filepath):
         return static_file(filepath, wwwdir)
 
-    run(host='0.0.0.0', port=8080)
+    run(host='0.0.0.0', port=8080, quiet=True)
 
 def updateTemp(getTemp, tempState):
     i = 0
@@ -37,13 +41,45 @@ def updateTemp(getTemp, tempState):
         sleep(1)
         i = i+1
 
-if __name__ == '__main__':
+def heating(i, tempState):
+    import RPi.GPIO as GPIO
 
-    from multiprocessing import Process, Manager
-    import sys
-    import read_temp_dev
-    import read_temp_prod
-    from time import sleep
+    heating = False
+    lowerLimit = 92
+    upperLimit = 94
+
+    he_pin = 26
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(he_pin, GPIO.OUT)
+    GPIO.output(he_pin, 0)
+    try:
+        while True:
+            temp = tempState["avgTemp"]
+            if heating:
+                # as long as temp is above limit
+                if(temp > upperLimit):
+                    # stop heating
+                    heating = False
+                    print "stop heating at '%s' !!!!!" % temp
+                    GPIO.output(he_pin, 0)
+                else:
+                    print "still heating at %s" % temp
+
+            else:
+                # as long as temp is below limit
+                if(temp < lowerLimit):
+                    # start heating
+                    heating = True
+                    print "start heating at '%s' !!!!!" % temp
+                    GPIO.output(he_pin, 1)
+                else:
+                    print "still not heating at %s" % temp
+            sleep(1)
+    finally:
+        GPIO.output(he_pin,0)
+        GPIO.cleanup()
+
+if __name__ == '__main__':
 
     args = sys.argv
     errorMsg ="please pass 'dev' or 'prod' as arg"
@@ -63,8 +99,10 @@ if __name__ == '__main__':
     print "running '%s' mode" % arg
 
     if arg == MODE_DEV:
+        import read_temp_dev
         getTemp=read_temp_dev.getTemp
     else:
+        import read_temp_prod
         getTemp=read_temp_prod.getTemp
 
     print "current tempt: %s" % getTemp()
@@ -78,6 +116,10 @@ if __name__ == '__main__':
     p.daemon = True
     p.start()
 
+    h = Process(target=heating, args=(1, tempState))
+    h.daemon = True
+    h.start()
+
     r = Process(target=server, args=(1, tempState))
     r.daemon = True
     r.start()
@@ -86,5 +128,6 @@ if __name__ == '__main__':
     print p.is_alive()
 
     while p.is_alive():
-        print tempState["avgTemp"]
+        temp =  tempState["avgTemp"]
+        #print temp
         sleep(1)
