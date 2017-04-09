@@ -89,15 +89,14 @@ def heating(i, tempState):
             if (heatTime == 0 and sleepTime == 0):
                 sleep(1)
 
-            if(heatTime > 5):
-                heatTime = 5
+            if(heatTime > 2):
+                heatTime = 2
                 sleepTime = 4
                 print "cut heating from %f to 5 seconds" % heatTime
 
             if(sleepTime > 5):
                 sleepTime = 5
                 print "cut sleeping from %f to 5 seconds" % sleepTime
-
 
             if(heatTime > 0):
                 print "heat: %f, temp: %f, pid: %f" % (heatTime, avgTemp, avgPid)
