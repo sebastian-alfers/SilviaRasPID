@@ -24,7 +24,7 @@ function initHost(hostId) {
             tempDataSets[1].append(dateTime, json.avgPid);
             document.getElementById("curr_temp").innerHTML = json.avgTemp;
             document.getElementById("curr_pid").innerHTML = json.avgPid;
-
+            document.getElementById("heatStatus").innerHTML = json.isHeating;
         }
     }
     xmlHttp.open("GET", "/temp", true); // true for asynchronous
@@ -34,7 +34,7 @@ function initHost(hostId) {
   //, maxValue:170,minValue:80,
 
   // Build the timeline
-  var timeline = new SmoothieChart({ millisPerPixel: 20, grid: { strokeStyle: 'transparent', lineWidth: 1, millisPerLine: 1000, verticalSections: 4 },  millisPerPixel: 1500, maxValue:120,minValue:80});
+  var timeline = new SmoothieChart({ millisPerPixel: 20, grid: { strokeStyle: 'transparent', lineWidth: 1, millisPerLine: 1000, verticalSections: 4 },  millisPerPixel: 1500});
   timeline.addTimeSeries(tempDataSets[0], seriesOptions[0]);
   timeline.addTimeSeries(tempDataSets[1], seriesOptions[1]);
   timeline.streamTo(document.getElementById(hostId + 'Cpu'), 1000);
