@@ -1,20 +1,15 @@
 #!/usr/bin/python
 
-from multiprocessing import Process, Manager
 import sys
+from multiprocessing import Process, Manager
 from time import sleep
 
 
 def server(i, tempState):
     import json
-    from bottle import route, run, get, post, request, static_file, abort, response
-    from bottle import Response
-    from subprocess import call
-    from datetime import datetime
-    from bottle import SimpleTemplate
-    from bottle import route, run, template
+    from bottle import static_file
+    from bottle import route, run
     import os
-    from json import dumps
 
     basedir = os.path.dirname(__file__)
     wwwdir = basedir + '/www/'
@@ -49,7 +44,6 @@ def updateTemp(getTemp, tempState):
     i = 0
     temphist = [0., 0., 0., 0., 0.]
     pidHist = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
-    tempState["test"] = "ab"
     while True:
         temphist[i % 5] = getTemp()
         avgTmp = sum(temphist) / len(temphist)
@@ -61,7 +55,7 @@ def updateTemp(getTemp, tempState):
         tempState["avgTemp"] = avgTmp
         tempState["avgPid"] = avgPid
 
-        sleep(1)
+        sleep(0.5)
         i = i + 1
 
 
@@ -80,16 +74,17 @@ def heating(i, tempState):
     try:
         while True:
             avgTemp = tempState["avgTemp"]
+            avgPid = tempState["avgPid"]
             if heating:
                 # as long as temp is above limit
                 if (avgTemp > upperLimit):
                     # stop heating
                     heating = False
                     tempState["isHeating"] = False
-                    print "stop heating at '%s' !!!!!" % avgTemp
+                    print "stop heating at temp:'%f', pid: %f " % (avgTemp, avgPid)
                     GPIO.output(he_pin, 0)
-                else:
-                    print "still heating at %s" % avgTemp
+                #else:
+                    #print "still heating at %s" % avgTemp
 
             else:
                 # as long as temp is below limit
@@ -97,10 +92,10 @@ def heating(i, tempState):
                     # start heating
                     heating = True
                     tempState["isHeating"] = True
-                    print "start heating at '%s' !!!!!" % avgTemp
+                    print "start heating at temp:'%f', pid: %f " % (avgTemp, avgPid)
                     GPIO.output(he_pin, 1)
-                else:
-                    print "still not heating at %s" % avgTemp
+                #else:
+                    #print "still not heating at %s" % avgTemp
 
             sleep(1)
     finally:
